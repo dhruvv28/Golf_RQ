@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'services/db_service.dart';
 import 'services/club_service.dart';
 import 'services/comms_service.dart';
+import 'services/file_gps_service.dart';
 import 'services/voice_coach.dart';
 import 'services/hole_service.dart';
 import 'services/practice_session_service.dart';
@@ -31,6 +32,7 @@ void main() async {
         Provider<DbService>.value(value: db),           // ONE initialized instance
         ChangeNotifierProvider(create: (_) => ClubService()),
         ChangeNotifierProvider(create: (_) => CommsService()..init()),
+        ChangeNotifierProvider(create: (_) => FileGpsService()),
         ChangeNotifierProvider(create: (_) => VoiceCoach()..init()),
         ChangeNotifierProvider(create: (_) => HoleService()),
         ChangeNotifierProvider(create: (_) => PracticeSessionService()..init()),

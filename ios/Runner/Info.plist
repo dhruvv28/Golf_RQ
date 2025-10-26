@@ -67,6 +67,23 @@
 	<dict>
 		<key>NSAllowsArbitraryLoadsInLocalNetwork</key>
 		<true/>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
 	</dict>
+
+	<!-- 🎤 Microphone for TTS (if needed) -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app uses text-to-speech for accessibility features.</string>
+
+	<!-- 📱 Background modes for continuous GPS tracking -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>background-processing</string>
+	</array>
+
+	<!-- 🔋 Battery optimization -->
+	<key>UIRequiresFullScreen</key>
+	<false/>
 </dict>
 </plist>
