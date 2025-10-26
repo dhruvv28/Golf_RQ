@@ -8,7 +8,7 @@ import '../services/hole_service.dart';
 import '../services/club_service.dart';
 import '../services/voice_coach.dart';
 import '../services/db_service.dart';
-import '../services/comms_service.dart';
+import '../services/file_gps_service.dart';
 import '../services/practice_session_service.dart';
 
 import '../models/shot.dart';
@@ -68,7 +68,11 @@ class _DistanceScreenState extends State<DistanceScreen> {
         accuracy: LocationAccuracy.best,
         distanceFilter: 1,
       ),
-    ).listen((p) => setState(() => _pos = p));
+    ).listen((p) {
+      setState(() => _pos = p);
+      // Update FileGpsService with user's position for distance calculation
+      context.read<FileGpsService>().updateUserPosition(p);
+    });
 
     _compSub = FlutterCompass.events?.listen(
       (e) => setState(() => _compass = e),
@@ -177,7 +181,6 @@ class _DistanceScreenState extends State<DistanceScreen> {
   @override
   Widget build(BuildContext context) {
     final hole   = context.watch<HoleService>().target;
-    final comms  = context.watch<CommsService>();
     final club   = context.watch<ClubService>();
     final tts    = context.read<VoiceCoach>();
     final db     = context.read<DbService>();
@@ -194,9 +197,11 @@ class _DistanceScreenState extends State<DistanceScreen> {
       targetBearing = null;
     }
 
+    // Get ball GPS from FileGpsService
+    final gpsService = context.watch<FileGpsService>();
     double? yardsToBall;
-    if (_pos != null && comms.ballLat != null && comms.ballLon != null) {
-      final mBall = haversineMeters(_pos!.latitude, _pos!.longitude, comms.ballLat!, comms.ballLon!);
+    if (_pos != null && gpsService.ballLat != null && gpsService.ballLon != null) {
+      final mBall = haversineMeters(_pos!.latitude, _pos!.longitude, gpsService.ballLat!, gpsService.ballLon!);
       yardsToBall = metersToYards(mBall);
     }
 
@@ -272,12 +277,14 @@ class _DistanceScreenState extends State<DistanceScreen> {
               FilledButton.icon(
                 onPressed: (yardsToHole != null && recName != null)
                     ? () async {
+                        final yards = yardsToHole!;
+                        final clubName = recName;
                         final shot = Shot(
                           timestamp: DateTime.now(),
                           lat: _pos?.latitude ?? 0.0,
                           lon: _pos?.longitude ?? 0.0,
-                          distance: yardsToHole!.toDouble(),
-                          club: recName!,
+                          distance: yards,
+                          club: clubName,
                         );
                         final shotId = await db.saveShot(shot);
                         
@@ -293,7 +300,7 @@ class _DistanceScreenState extends State<DistanceScreen> {
                           // Announce shot saved
                           context.read<VoiceCoach>().announceShot(shot.club, shot.distance);
                         }
-                        tts.say('Saved shot: $recName ${yardsToHole!.round()} yards.');
+                        tts.say('Saved shot: $clubName ${yards.round()} yards.');
                       }
                     : null,
                 icon: const Icon(Icons.save_alt),
